@@ -13,7 +13,11 @@ public class MagicImage {
     }
 
     public static void gaussianBlur(Bitmap bitmap) {
-        nGaussianBlur(bitmap, 32);
+        gaussianBlur(bitmap, 32);
+    }
+
+    public static void gaussianBlur(Bitmap bitmap, int radius) {
+        nGaussianBlur(bitmap, radius);
     }
 
     private static native void nGaussianBlur(Bitmap bitmap, int radius);
