@@ -12,6 +12,7 @@ buildscript {
     }
 }
 
+
 plugins {
     id "com.jfrog.bintray" version "1.7"
 }
@@ -19,6 +20,9 @@ plugins {
 allprojects {
     apply plugin: 'com.jfrog.bintray'
     repositories {
+        maven {
+            url  "http://dl.bintray.com/quenlenliu/MagicImage" 
+        }
         jcenter()
     }
 }
