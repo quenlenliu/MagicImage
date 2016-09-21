@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "24.0.0"
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         minSdkVersion 15
@@ -25,20 +25,23 @@ android {
 }
 
 
+def siteUrl = 'https://github.com/quenlenliu/MagicImage'
+def gitUrl = 'https://github.com/quenlenliu/MagicImage.git'
 
-
+group = 'org.quenlen.magic'
+version = '1.0'
 
 bintray {
     user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
     configurations = ['archives']
-    publications = ['MyPublication']
+    //publications = ['MyPublication']
     pkg {
         repo = 'MagicImage'
         name = 'org.quenlen.magic'
         userOrg = "quenlenliu"
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/quenlenliu/MagicImage.git'
+        vcsUrl = gitUrl
+        publicDownloadNumbers = true
         version {
             name = '1.0'
             desc = 'Magic image 1.0'
@@ -48,13 +51,42 @@ bintray {
     }
 }
 
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name 'MagicImage'
+            description 'A image library for process bitmap'
+            version '1.0'
+
+            url siteUrl
+
+            packaging 'aar'
             groupId 'org.quenlen.magic'
             artifactId 'magic'
-            version '1.0'
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            scm {
+                connection gitUrl
+                developerConnection gitUrl
+                url siteUrl
+            }
+
+            developers {
+                developer {
+                    id 'quenlenliu'
+                    name 'Quenlen Liu'
+                    email 'quenlenliu@gmail.com'
+                }
+            }
         }
+
     }
 }
 

@@ -6,7 +6,7 @@
 #include <malloc.h>
 
 #define DEBUG 1
-#define LOG_TAG "NEL_MagicImage"
+#define LOG_TAG "MagicImage"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
@@ -66,7 +66,7 @@ static double_t kernel(double_t distance, double_t sigma)
     double_t result = exp(-0.5 * distance * distance / sigma2) / sqrt(2.0 * M_PI * sigma2);
     return result;
 }
-#define WEIGHT_FACTOR 0.95
+#define WEIGHT_FACTOR 1.2 
 
 static void get_weights(uint8_t radius, double_t * weights)
 {
@@ -85,7 +85,7 @@ static void get_weights(uint8_t radius, double_t * weights)
         sum_weights += weights[i];
     }
     sum_weights = 2 * sum_weights - weights[0];
-    sum_weights = sum_weights / WEIGHT_FACTOR;
+    sum_weights = sum_weights * WEIGHT_FACTOR;
     for (i = 0; i < radius; ++i)
     {
         weights[i] /= sum_weights;
