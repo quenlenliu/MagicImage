@@ -13,7 +13,7 @@ public class MagicImage {
     }
 
     public static void gaussianBlur(Bitmap bitmap) {
-        gaussianBlur(bitmap, 32);
+        gaussianBlur(bitmap, 24);
     }
 
     public static void gaussianBlur(Bitmap bitmap, int radius) {
@@ -28,7 +28,7 @@ public class MagicImage {
      * @param bitmap
      * @return
      */
-    public static Bitmap composeBitmap(Bitmap result, Bitmap bitmap) {
+    public synchronized static Bitmap composeBitmap(Bitmap result, Bitmap bitmap) {
         if (result.getWidth() != bitmap.getWidth() || result.getHeight() != bitmap.getHeight()) {
             throw new RuntimeException("Two bitmap's size must equal");
         } else {

@@ -39,7 +39,7 @@ static argb* getColorValue(uint32_t color, argb * value)
 
 static uint32_t toColor(argb* color)
 {
-    return (uint32_t)color->alpha << 24 | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
+    return ((uint32_t)color->alpha) << 24 | ((uint32_t )color->red) << 16 | ((uint32_t )color->green) << 8 | (uint32_t )color->blue;
 }
 
 
@@ -48,7 +48,7 @@ static void set_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint1
     assert(x < info->width && x >= 0);
     assert(y < info->height && y >= 0);
     uint32_t * pixels_p = (uint32_t *) pixels;
-    pixels_p[y * info->width + x] = pixel;
+    pixels_p[x * info->height + y] = pixel;
 }
 
 static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint16_t y)
@@ -56,7 +56,7 @@ static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, u
     assert(x < info->width && x >= 0);
     assert(y < info->height && y >= 0);
     uint32_t * pixels_p = (uint32_t *) pixels;
-    uint32_t p = pixels_p[y * info->width + x];
+    uint32_t p = pixels_p[x * info->height + y];
     return p;
 }
 
@@ -113,12 +113,17 @@ static argb* argb_add(argb* a, argb* b)
 
 static argb* argb_compose(argb* a, argb* b)
 {
-    double_t factor = 255.0 - b->alpha;
-    a->alpha = factor * a->alpha + b->alpha;
-    a->red =  factor * a->red + b->red;
-    a->green =  factor * a->green + b->green;
-    a->blue =  factor * a->blue + b->blue;
-    return a;
+    //ssum.a * ssum + (1.0 - ssum.a) * wsum;
+/*    double_t factor = 255.0 - b->alpha;
+    a->alpha = factor * a->alpha + b->alpha * 1.0 * b->alpha;
+    a->red =  factor * a->red + b->red * b->alpha * 1.0;
+    a->green =  factor * a->green + b->green * b->alpha * 1.0;
+    a->blue =  factor * a->blue + b->blue * b->alpha * 1.0;
+    a->alpha = b->alpha;
+    a->red = b->red;
+    a->green = b->green;
+    a->blue = b->blue;*/
+    return b;
 }
 
 
@@ -212,17 +217,33 @@ static void compose_bitmap(AndroidBitmapInfo *result_info, void *result_pixels,
     height = result_info->height;
     argb* rp = (argb*) malloc(sizeof(argb));
     argb* bp = (argb*) malloc(sizeof(argb));
+    if (DEBUG)
+    {
+        LOGD("Start compose bitmap: size=%d x %d", width, height);
+    }
 
     for (x = 0; x < width; ++x)
     {
         for (y = 0; y < height; ++y)
         {
-            rp = getColorValue(get_pixels(result_info, result_pixels, x, y), rp);
-            bp = getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
-            rp = argb_compose(rp, bp);
+            getColorValue(get_pixels(result_info, result_pixels, x, y), rp);
+            getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
+            if (DEBUG)
+            {
+                //LOGD("GetColorValue PRE: %f %f %f %f", rp->alpha, rp->red, rp->green, rp->blue);
+            }
+            argb_compose(rp, bp);
+            if (DEBUG)
+            {
+                //LOGD("GetColorValue END: %f %f %f %f", rp->alpha, rp->red, rp->green, rp->blue);
+            }
             set_pixels(result_info, result_pixels, x, y, toColor(rp));
-
         }
+    }
+
+    if (DEBUG)
+    {
+        LOGD("End compose bitmap: size=%d x %d", width, height);
     }
     free(bp);
     free(rp);
@@ -278,7 +299,7 @@ Java_org_quenlen_magic_MagicImage_nComposeBitmap(JNIEnv *env, jclass clazz, jobj
         return;
     }
 
-    if ((ret = AndroidBitmap_getInfo(env, result, &bitmap_info)) < 0) {
+    if ((ret = AndroidBitmap_getInfo(env, bitmap, &bitmap_info)) < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error = %d", ret);
         return;
     }
@@ -298,12 +319,13 @@ Java_org_quenlen_magic_MagicImage_nComposeBitmap(JNIEnv *env, jclass clazz, jobj
         return;
     }
 
-    if ((ret = AndroidBitmap_lockPixels(env, result, &bitmap_pixels)) < 0) {
+    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &bitmap_pixels)) < 0) {
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return;
     }
     LOGI("AndroidBitmapInfo: Size:%d x %d, Stride:%d, Format:%d, Flag: %d", result_info.width, result_info.height, result_info.stride, result_info.format, result_info.flags);
     compose_bitmap(&result_info, result_pixels, &bitmap_info, bitmap_pixels);
+
     if ((ret = AndroidBitmap_unlockPixels(env, bitmap) < 0)){
         LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
     }
