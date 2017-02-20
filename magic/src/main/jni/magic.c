@@ -10,6 +10,7 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define WEIGHT_FACTOR 1.1
 
 
 typedef struct {
@@ -39,7 +40,7 @@ static argb* getColorValue(uint32_t color, argb * value)
 
 static uint32_t toColor(argb* color)
 {
-    return ((uint32_t)color->alpha) << 24 | ((uint32_t )color->red) << 16 | ((uint32_t )color->green) << 8 | (uint32_t )color->blue;
+    return (uint32_t)color->alpha << 24 | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
 }
 
 
@@ -48,7 +49,7 @@ static void set_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint1
     assert(x < info->width && x >= 0);
     assert(y < info->height && y >= 0);
     uint32_t * pixels_p = (uint32_t *) pixels;
-    pixels_p[x * info->height + y] = pixel;
+    pixels_p[y * info->width + x] = pixel;
 }
 
 static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint16_t y)
@@ -56,7 +57,7 @@ static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, u
     assert(x < info->width && x >= 0);
     assert(y < info->height && y >= 0);
     uint32_t * pixels_p = (uint32_t *) pixels;
-    uint32_t p = pixels_p[x * info->height + y];
+    uint32_t p = pixels_p[y * info->width + x];
     return p;
 }
 
@@ -66,7 +67,6 @@ static double_t kernel(double_t distance, double_t sigma)
     double_t result = exp(-0.5 * distance * distance / sigma2) / sqrt(2.0 * M_PI * sigma2);
     return result;
 }
-#define WEIGHT_FACTOR 1.2 
 
 static void get_weights(uint8_t radius, double_t * weights)
 {
@@ -113,17 +113,12 @@ static argb* argb_add(argb* a, argb* b)
 
 static argb* argb_compose(argb* a, argb* b)
 {
-    //ssum.a * ssum + (1.0 - ssum.a) * wsum;
-/*    double_t factor = 255.0 - b->alpha;
-    a->alpha = factor * a->alpha + b->alpha * 1.0 * b->alpha;
-    a->red =  factor * a->red + b->red * b->alpha * 1.0;
-    a->green =  factor * a->green + b->green * b->alpha * 1.0;
-    a->blue =  factor * a->blue + b->blue * b->alpha * 1.0;
-    a->alpha = b->alpha;
-    a->red = b->red;
-    a->green = b->green;
-    a->blue = b->blue;*/
-    return b;
+    double_t factor = 255.0 - b->alpha;
+    a->alpha = factor * a->alpha + b->alpha;
+    a->red =  factor * a->red + b->red;
+    a->green =  factor * a->green + b->green;
+    a->blue =  factor * a->blue + b->blue;
+    return a;
 }
 
 
@@ -226,18 +221,11 @@ static void compose_bitmap(AndroidBitmapInfo *result_info, void *result_pixels,
     {
         for (y = 0; y < height; ++y)
         {
-            getColorValue(get_pixels(result_info, result_pixels, x, y), rp);
-            getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
-            if (DEBUG)
-            {
-                //LOGD("GetColorValue PRE: %f %f %f %f", rp->alpha, rp->red, rp->green, rp->blue);
-            }
-            argb_compose(rp, bp);
-            if (DEBUG)
-            {
-                //LOGD("GetColorValue END: %f %f %f %f", rp->alpha, rp->red, rp->green, rp->blue);
-            }
+            rp = getColorValue(get_pixels(result_info, result_pixels, x, y), rp);
+            bp = getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
+            rp = argb_compose(rp, bp);
             set_pixels(result_info, result_pixels, x, y, toColor(rp));
+
         }
     }
 

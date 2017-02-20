@@ -52,7 +52,10 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap screenshot = BitmapFactory.decodeResource(getResources(), R.mipmap.screen_shot);
                 Bitmap wallpaper = BitmapFactory.decodeResource(getResources(), R.mipmap.wallpaper);
                 wallpaper = Bitmap.createScaledBitmap(wallpaper, screenshot.getWidth(), screenshot.getHeight(), false);
-                return MagicImage.composeBitmap(wallpaper, screenshot);
+
+                Bitmap result = MagicImage.composeBitmap(wallpaper, screenshot);
+                MagicImage.gaussianBlur(result);
+                return result;
             }
 
             @Override

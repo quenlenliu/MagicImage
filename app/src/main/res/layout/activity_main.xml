@@ -11,20 +11,17 @@
 
     <ImageView
         android:id="@+id/pre"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Source"
         android:src="@drawable/ic_launcher" />
     <ImageView
         android:id="@+id/post"
         android:layout_toRightOf="@id/pre"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Source"
         android:src="@drawable/ic_launcher"/>
 
     <ImageView
         android:id="@+id/result"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Source"
         android:layout_marginTop="30dp"
         android:src="@drawable/ic_launcher"
         android:layout_below="@+id/pre"/>
