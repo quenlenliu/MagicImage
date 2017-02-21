@@ -44,11 +44,13 @@ public class MagicImage {
     public static Bitmap composeBitmap(int dstWidth, int dstHeight, @NonNull Bitmap background, @NonNull Rect backRect,@NonNull Bitmap foreground, @NonNull Rect foreRect) {
         Bitmap result = background;
         if (background.getWidth() != dstWidth || background.getHeight() != dstHeight) {
-            result = Bitmap.createBitmap(dstWidth, dstHeight, Bitmap.Config.RGB_565);
+            result = Bitmap.createBitmap(dstWidth, dstHeight, Bitmap.Config.ARGB_8888);
         }
         Rect resultRect = new Rect(0, 0, result.getWidth(), result.getHeight());
         Canvas canvas = new Canvas(result);
-        canvas.drawBitmap(background, backRect, resultRect, mPaint);
+        if (result != background) {
+            canvas.drawBitmap(background, backRect, resultRect, mPaint);
+        }
         canvas.drawBitmap(foreground, foreRect, resultRect, mPaint);
         return result;
 
