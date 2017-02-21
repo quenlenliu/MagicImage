@@ -27,8 +27,8 @@ android {
 
 def siteUrl = 'https://github.com/quenlenliu/MagicImage'
 def gitUrl = 'https://github.com/quenlenliu/MagicImage.git'
-def bintray_version = '1.0.1'
-def vcsVersion = 'v1.0'
+def bintray_version = '1.0.2'
+def vcsVersion = 'v1.0.2'
 
 group = 'org.quenlen.magic'
 version = bintray_version
