@@ -27,8 +27,8 @@ android {
 
 def siteUrl = 'https://github.com/quenlenliu/MagicImage'
 def gitUrl = 'https://github.com/quenlenliu/MagicImage.git'
-def bintray_version = '1.3'
-def vcsVersion = 'v1.3'
+def bintray_version = '1.0.1'
+def vcsVersion = 'v1.0'
 
 group = 'org.quenlen.magic'
 version = bintray_version
@@ -45,6 +45,9 @@ bintray {
         userOrg = "quenlenliu"
         vcsUrl = gitUrl
         publicDownloadNumbers = true
+        issueTrackerUrl = 'https://github.com/quenlenliu/MagicImage/issues'
+        labels = ['android', 'image']
+        githubReleaseNotesFile = 'README.md'
         version {
             name = bintray_version
             desc = 'Magic Image'

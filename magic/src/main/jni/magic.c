@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include <malloc.h>
+#include <stdbool.h>
 
 #define DEBUG 1
 #define LOG_TAG "MagicImage"
@@ -32,29 +33,34 @@ static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, u
 static argb* getColorValue(uint32_t color, argb * value)
 {
     value->alpha = color >> 24 & 0xFF;
-    value->red = color >> 16 & 0xFF;
+    value->blue = color >> 16 & 0xFF;
     value->green = color >> 8 & 0xFF;
-    value->blue = color & 0xFF;
+    value->red = color & 0xFF;
     return value;
+}
+
+/**
+
+******** ******** ******* ********
+   A        B        G      R
+
+**/
+static uint32_t toColorInternal(argb* color, bool ignoreAlpha)
+{
+    if (ignoreAlpha)
+    {
+        return (uint32_t )0xFF << 24 | (uint32_t )color->blue << 16 | (uint32_t )color->green << 8 | (uint32_t )color->red;
+    }
+    else
+    {
+        return (uint32_t )color->alpha << 24 | (uint32_t )color->blue << 16 | (uint32_t )color->green << 8 | (uint32_t )color->red;
+    }
 }
 
 static uint32_t toColor(argb* color)
 {
-    return toColor(color, false);
+    return toColorInternal(color, false);
 }
-
-static uint32_t toColor(argb* color, bool ignoreAlpha)
-{
-    if (ignoreAlpha)
-    {
-        return 0xFF | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
-    }
-    else
-    {
-        return (uint32_t)color->alpha << 24 | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
-    }
-}
-
 
 static void set_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint16_t y, uint32_t pixel)
 {
@@ -173,7 +179,7 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
                 result = argb_add(result, temp);
             }
 
-            set_pixels(info, temp_pixels, x, y, toColor(result, true));
+            set_pixels(info, temp_pixels, x, y, toColorInternal(result, true));
         }
     }
 
