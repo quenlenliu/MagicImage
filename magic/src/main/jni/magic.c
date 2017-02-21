@@ -40,7 +40,19 @@ static argb* getColorValue(uint32_t color, argb * value)
 
 static uint32_t toColor(argb* color)
 {
-    return (uint32_t)color->alpha << 24 | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
+    return toColor(color, false);
+}
+
+static uint32_t toColor(argb* color, bool ignoreAlpha)
+{
+    if (ignoreAlpha)
+    {
+        return 0xFF | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
+    }
+    else
+    {
+        return (uint32_t)color->alpha << 24 | (uint32_t )color->red << 16 | (uint32_t )color->green << 8 | (uint32_t )color->blue;
+    }
 }
 
 
@@ -161,7 +173,7 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
                 result = argb_add(result, temp);
             }
 
-            set_pixels(info, temp_pixels, x, y, toColor(result));
+            set_pixels(info, temp_pixels, x, y, toColor(result, true));
         }
     }
 
