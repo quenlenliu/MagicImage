@@ -32,10 +32,10 @@ static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, u
 
 static argb* getColorValue(uint32_t color, argb * value)
 {
-    value->alpha = color >> 24 & 0xFF;
-    value->blue = color >> 16 & 0xFF;
-    value->green = color >> 8 & 0xFF;
-    value->red = color & 0xFF;
+    value->alpha = (color & 0xFF000000) >> 24;
+    value->blue = (color & 0x00FF0000) >> 16;
+    value->green = (color & 0x0000FF00) >> 8;
+    value->red = color & 0x000000FF;
     return value;
 }
 

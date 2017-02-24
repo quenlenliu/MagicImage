@@ -44,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mPre.setImageResource(R.mipmap.screen_shot);
-        mPost.setImageResource(R.mipmap.wallpaper);
+        mPre.setImageResource(R.drawable.screenshot);
+        mPost.setImageResource(R.drawable.wallpaper);
 
 
     }
@@ -55,9 +55,8 @@ public class MainActivity extends AppCompatActivity {
         new AsyncTask<Context,Integer, Bitmap>() {
             @Override
             protected Bitmap doInBackground(Context... params) {
-                Bitmap screenshot = BitmapFactory.decodeResource(getResources(), R.mipmap.screen_shot);
-                Bitmap wallpaper = BitmapFactory.decodeResource(getResources(), R.mipmap.wallpaper);
-                //wallpaper = Bitmap.createScaledBitmap(wallpaper, screenshot.getWidth(), screenshot.getHeight(), false);
+                Bitmap screenshot = BitmapFactory.decodeResource(getResources(), R.drawable.screenshot).copy(Bitmap.Config.ARGB_8888, true);
+                Bitmap wallpaper = BitmapFactory.decodeResource(getResources(), R.drawable.wallpaper).copy(Bitmap.Config.ARGB_8888, true);
 
                 Bitmap result = getBlurScreen(wallpaper, screenshot);
 
@@ -77,9 +76,9 @@ public class MainActivity extends AppCompatActivity {
                 calculateArea(area, wallpaperRect, screenShotRect);
                 wallpaper = Bitmap.createBitmap(wallpaper, area.left, area.top,
                         area.width(), area.height());
-                wallpaper = Bitmap.createScaledBitmap(wallpaper, screenShot.getWidth(), screenShot.getHeight(), false);
+                wallpaper = Bitmap.createScaledBitmap(wallpaper, screenShot.getWidth(), screenShot.getHeight(), true);
                 Bitmap result = MagicImage.composeBitmap(wallpaper,screenShot);
-                MagicImage.gaussianBlur(result);
+                MagicImage.gaussianBlur(result, 32);
                 return result;
             }
 
@@ -112,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(Bitmap bitmap) {
+
+                //mResult.setImageResource(R.drawable.gaussian);
                 mResult.setImageBitmap(bitmap);
             }
 
