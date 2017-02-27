@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap result = MagicImage.composeBitmap(wallpaper,screenShot);
                 result = result.copy(Bitmap.Config.ARGB_8888, true);
                 result.setHasAlpha(true);
-                MagicImage.gaussianBlur(result, 32, false);
+                MagicImage.gaussianBlur(result, 32, true);
                 return result;
             }
 
