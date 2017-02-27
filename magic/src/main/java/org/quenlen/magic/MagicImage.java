@@ -17,14 +17,22 @@ public class MagicImage {
     }
 
     public static void gaussianBlur(Bitmap bitmap) {
-        gaussianBlur(bitmap, 32);
+        gaussianBlur(bitmap, 32, false);
+    }
+
+    public static void gaussianBlur(Bitmap bitmap, boolean ignoreAlpha) {
+       nGaussianBlur(bitmap, 32, ignoreAlpha);
     }
 
     public static void gaussianBlur(Bitmap bitmap, int radius) {
-        nGaussianBlur(bitmap, radius);
+        nGaussianBlur(bitmap, radius, false);
     }
 
-    private static native void nGaussianBlur(Bitmap bitmap, int radius);
+    public static void gaussianBlur(Bitmap bitmap, int radiua, boolean ignoreAlpha) {
+        nGaussianBlur(bitmap, radiua, ignoreAlpha);
+    }
+
+    private static native void nGaussianBlur(Bitmap bitmap, int radius, boolean ignoreAlpha);
 
     /**
      * Compose bitmap.

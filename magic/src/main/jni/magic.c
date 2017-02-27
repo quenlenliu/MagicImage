@@ -6,12 +6,12 @@
 #include <malloc.h>
 #include <stdbool.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define LOG_TAG "MagicImage"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#define WEIGHT_FACTOR 1.1
+#define WEIGHT_FACTOR 1.0
 
 
 typedef struct {
@@ -21,7 +21,7 @@ typedef struct {
     double_t blue;
 } argb;
 
-static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius);
+static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius, bool ignoreAlpha);
 
 static double_t kernel(double_t distance, double_t sigma);
 
@@ -30,12 +30,14 @@ static void get_weights(uint8_t radius, double_t* weights);
 static void set_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint16_t y, uint32_t pixel);
 static uint32_t get_pixels(AndroidBitmapInfo* info, void * pixels, uint16_t x, uint16_t y);
 
+static uint32_t  toColorInternalFixed(argb* color, bool ignoreAlpha, bool fixedAlpha);
+
 static argb* getColorValue(uint32_t color, argb * value)
 {
-    value->alpha = (color & 0xFF000000) >> 24;
-    value->blue = (color & 0x00FF0000) >> 16;
-    value->green = (color & 0x0000FF00) >> 8;
-    value->red = color & 0x000000FF;
+    value->alpha = color  >> 24;
+    value->blue = (color >> 16) & 0xFF;
+    value->green = (color >> 8) & 0xFF;
+    value->red = color & 0xFF;
     return value;
 }
 
@@ -47,14 +49,35 @@ static argb* getColorValue(uint32_t color, argb * value)
 **/
 static uint32_t toColorInternal(argb* color, bool ignoreAlpha)
 {
-    if (ignoreAlpha)
+    return toColorInternalFixed(color, ignoreAlpha, true);
+}
+
+static uint32_t  toColorInternalFixed(argb* color, bool ignoreAlpha, bool fixedAlpha) {
+     if (ignoreAlpha)
     {
-        return (uint32_t )0xFF << 24 | (uint32_t )color->blue << 16 | (uint32_t )color->green << 8 | (uint32_t )color->red;
+        if (fixedAlpha) {
+            uint32_t premultiR = (uint32_t) (color->alpha * color->red) >> 8;
+            uint32_t premultiG = (uint32_t) (color->alpha * color->green) >> 8;
+            uint32_t premultiB = (uint32_t) (color->alpha * color->blue) >> 8;
+
+            return (uint32_t) 0xFF << 24 | premultiB << 16 | premultiG << 8 | premultiR;
+        } else {
+            return (uint32_t) 0xFF << 24 | (uint32_t )color->blue << 16 | (uint32_t) color->green << 8 |(uint32_t) color->red;
+        }
     }
     else
     {
-        return (uint32_t )color->alpha << 24 | (uint32_t )color->blue << 16 | (uint32_t )color->green << 8 | (uint32_t )color->red;
+        if (fixedAlpha) {
+            uint32_t premultiR = (uint32_t) (color->alpha * color->red) >> 8;
+            uint32_t premultiG = (uint32_t) (color->alpha * color->green) >> 8;
+            uint32_t premultiB = (uint32_t) (color->alpha * color->blue) >> 8;
+
+            return (uint32_t) color->alpha << 24 | premultiB << 16 | premultiG << 8 | premultiR;
+        } else {
+            return (uint32_t) color->alpha << 24 | (uint32_t )color->blue << 16 | (uint32_t) color->green << 8 |(uint32_t) color->red;
+        }
     }
+
 }
 
 static uint32_t toColor(argb* color)
@@ -131,7 +154,7 @@ static argb* argb_add(argb* a, argb* b)
 
 static argb* argb_compose(argb* a, argb* b)
 {
-    double_t factor = 255.0 - b->alpha;
+    double_t factor = 256.0 - b->alpha;
     a->alpha = factor * a->alpha + b->alpha;
     a->red =  factor * a->red + b->red;
     a->green =  factor * a->green + b->green;
@@ -140,8 +163,7 @@ static argb* argb_compose(argb* a, argb* b)
 }
 
 
-
-static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) {
+static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius, bool ignoreAlpha) {
     double_t weights[radius];
     get_weights(radius, weights);
 
@@ -164,6 +186,9 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
         for (x = 0; x < width; x++)
         {
             result = getColorValue(get_pixels(info, pixels, x, y), result);
+            if (DEBUG && x == width /  2) {
+                LOGD("Hior Get: %f, %f, %f, %f", result->alpha, result->red, result->green, result->blue);
+            }
             result = argb_multi(result, weights[0]);
 
             for (i = 1; i < radius; i++)
@@ -178,8 +203,10 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
                 temp = argb_multi(temp, weights[i]);
                 result = argb_add(result, temp);
             }
-
-            set_pixels(info, temp_pixels, x, y, toColorInternal(result, true));
+            if (DEBUG && x == width / 2) {
+                LOGD("Hior Set: %f, %f, %f, %f", result->alpha, result->red, result->green, result->blue);
+            }
+            set_pixels(info, temp_pixels, x, y, toColorInternal(result, false));
         }
     }
 
@@ -187,6 +214,9 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
         for (x = 0; x < width; ++x)
         {
             result = getColorValue(get_pixels(info, temp_pixels, x, y), result);
+            if (DEBUG && x == width / 2) {
+                LOGD("Ver Get: %f, %f, %f, %f", result->alpha, result->red, result->green, result->blue);
+            }
             result = argb_multi(result, weights[0]);
 
             for (i = 1; i < radius; ++i)
@@ -201,7 +231,10 @@ static void gaussianBlur(AndroidBitmapInfo* info, void* pixels, uint8_t radius) 
                 temp = argb_multi(temp, weights[i]);
                 result = argb_add(result, temp);
             }
-            set_pixels(info, pixels, x, y, toColor(result));
+            if (DEBUG && x == width / 2) {
+                LOGD("Ver Set: %f, %f, %f, %f", result->alpha, result->red, result->green, result->blue);
+            }
+            set_pixels(info, pixels, x, y, toColorInternalFixed(result, ignoreAlpha, false));
         }
     }
 
@@ -243,7 +276,6 @@ static void compose_bitmap(AndroidBitmapInfo *result_info, void *result_pixels,
             bp = getColorValue(get_pixels(bitmap_info, bitmap_pixels, x, y), bp);
             rp = argb_compose(rp, bp);
             set_pixels(result_info, result_pixels, x, y, toColor(rp));
-
         }
     }
 
@@ -257,7 +289,7 @@ static void compose_bitmap(AndroidBitmapInfo *result_info, void *result_pixels,
 
 
 JNIEXPORT void JNICALL
-Java_org_quenlen_magic_MagicImage_nGaussianBlur(JNIEnv *env, jclass clazz, jobject bitmap, jint radius)
+Java_org_quenlen_magic_MagicImage_nGaussianBlur(JNIEnv *env, jclass clazz, jobject bitmap, jint radius, jboolean ignoreAlpha)
 {
     AndroidBitmapInfo info;
     void* pixels;
@@ -284,7 +316,7 @@ Java_org_quenlen_magic_MagicImage_nGaussianBlur(JNIEnv *env, jclass clazz, jobje
     }
 
     //Do real thing
-    gaussianBlur(&info, pixels, radius);
+    gaussianBlur(&info, pixels, radius, ignoreAlpha);
     if ((ret = AndroidBitmap_unlockPixels(env, bitmap) < 0)){
         LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
     }

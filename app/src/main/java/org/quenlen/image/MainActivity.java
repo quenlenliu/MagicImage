@@ -3,7 +3,10 @@ package org.quenlen.image;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public static int count = 1;
     private void startProgress() {
 
         new AsyncTask<Context,Integer, Bitmap>() {
@@ -78,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
                         area.width(), area.height());
                 wallpaper = Bitmap.createScaledBitmap(wallpaper, screenShot.getWidth(), screenShot.getHeight(), true);
                 Bitmap result = MagicImage.composeBitmap(wallpaper,screenShot);
-                MagicImage.gaussianBlur(result, 32);
+                result = result.copy(Bitmap.Config.ARGB_8888, true);
+                result.setHasAlpha(true);
+                MagicImage.gaussianBlur(result, 32, false);
                 return result;
             }
 
@@ -111,9 +117,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(Bitmap bitmap) {
-
+                ColorDrawable colorDrawable = new ColorDrawable(Color.parseColor("#88ff0000"));
                 //mResult.setImageResource(R.drawable.gaussian);
-                mResult.setImageBitmap(bitmap);
+                BitmapDrawable bitmapDrawable = new BitmapDrawable(getResources(), bitmap);
+                if ((count & 1) == 0) {
+                    mResult.setBackground(colorDrawable);
+                    mButton.setText("Color");
+                } else {
+                    mResult.setBackground(bitmapDrawable);
+                    mButton.setText("Bitmap");
+                }
+                count++;
             }
 
         }.execute(getBaseContext());
