@@ -4,16 +4,41 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 /**
  * Provider image process method
  */
 public class MagicImage {
     private static final String LIBRARY_NAME = "MagicImage";
+    private static final String TAG = "MagicImage";
+    private static int STATE = 0;
+    private final static int MASK_SUCCESS = 1;
+    private final static int MASK_FAILURE = 2;
+
 
     static {
-        System.loadLibrary(LIBRARY_NAME);
+        try {
+            //System.loadLibrary(LIBRARY_NAME);
+            //STATE = MASK_SUCCESS;
+        } catch (Exception ex) {
+            Log.e(TAG, "Auto load library error");
+            STATE = MASK_FAILURE;
+        }
+    }
+
+    public static void loadLibrary(String libraryPath) {
+        if (MASK_SUCCESS != STATE) {
+            try {
+                System.load(libraryPath);
+                STATE = MASK_SUCCESS;
+            } catch (Exception ex) {
+                Log.e(TAG, "Manual load library error");
+                STATE = MASK_FAILURE;
+            }
+        }
     }
 
     public static void gaussianBlur(Bitmap bitmap) {

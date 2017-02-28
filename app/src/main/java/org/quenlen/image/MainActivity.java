@@ -16,6 +16,8 @@ import android.widget.ImageView;
 
 import org.quenlen.magic.MagicImage;
 
+import java.io.File;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 wallpaper = Bitmap.createBitmap(wallpaper, area.left, area.top,
                         area.width(), area.height());
                 wallpaper = Bitmap.createScaledBitmap(wallpaper, screenShot.getWidth(), screenShot.getHeight(), true);
+                MagicImage.loadLibrary(new File("/data/data/org.quenlen.magic/files/lib/libMagicImage.so").getAbsolutePath());
                 Bitmap result = MagicImage.composeBitmap(wallpaper,screenShot);
                 result = result.copy(Bitmap.Config.ARGB_8888, true);
                 result.setHasAlpha(true);
