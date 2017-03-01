@@ -18,9 +18,13 @@ public class MagicImage {
     private final static int MASK_SUCCESS = 1;
     private final static int MASK_FAILURE = 2;
 
-
     static {
+        load();
+    }
+
+    private static void load() {
         try {
+            Log.d(TAG, "Auto load");
             System.loadLibrary(LIBRARY_NAME);
             STATE = MASK_SUCCESS;
         } catch (Exception ex) {
@@ -52,7 +56,7 @@ public class MagicImage {
      * 
      */
     public static void loadLibrary(String libraryPath) {
-        if (isLibraryLoadSuccess()) {
+        if (!isLibraryLoadSuccess()) {
             try {
                 System.load(libraryPath);
                 STATE = MASK_SUCCESS;
