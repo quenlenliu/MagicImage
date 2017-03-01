@@ -21,16 +21,38 @@ public class MagicImage {
 
     static {
         try {
-            //System.loadLibrary(LIBRARY_NAME);
-            //STATE = MASK_SUCCESS;
+            System.loadLibrary(LIBRARY_NAME);
+            STATE = MASK_SUCCESS;
         } catch (Exception ex) {
             Log.e(TAG, "Auto load library error");
             STATE = MASK_FAILURE;
         }
     }
-
+    
+    /**
+     * Manual load the library.
+     *
+     * In normal state. user will not need call this method, 
+     * 
+     * In the case, user develop an apk and need to pre install roms.
+     * system can't check the so file which contains in apk,
+     * now need push the so file to /system/lib or /system/lib64.
+     * 
+     * Use this method, User can manual load the .so file,
+     * no matter the .so file locate where, just need its
+     * absolutely path.
+     *
+     * Use can call {@link isLibraryLoadSuccess()} to check is or
+     * not load success.
+     *
+     * Notice: This class will try to load .so file if possiable.
+     * if auto loal success, this method will do nothing.
+     * 
+     * @param libraryPath the absolutely .so path.
+     * 
+     */
     public static void loadLibrary(String libraryPath) {
-        if (MASK_SUCCESS != STATE) {
+        if (isLibraryLoadSuccess()) {
             try {
                 System.load(libraryPath);
                 STATE = MASK_SUCCESS;
@@ -40,7 +62,22 @@ public class MagicImage {
             }
         }
     }
-
+    
+    /**
+     * Check load the .so file is or not success.
+     *
+     * @return true if load success, otherwise false.
+     */
+    public static boolean isLibraryLoadSuccess() {
+        return (STATE & MASK_SUCCESS) == MASK_SUCCESS;
+    }
+    
+    /**
+     * Gaussian blur a bitmap.
+     *
+     * The default blur radius is 32.
+     * 
+     */
     public static void gaussianBlur(Bitmap bitmap) {
         gaussianBlur(bitmap, 32, false);
     }
@@ -74,7 +111,8 @@ public class MagicImage {
     private static Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
 
 
-    public static Bitmap composeBitmap(int dstWidth, int dstHeight, @NonNull Bitmap background, @NonNull Rect backRect,@NonNull Bitmap foreground, @NonNull Rect foreRect) {
+    public static Bitmap composeBitmap(int dstWidth, int dstHeight, @NonNull Bitmap background, @NonNull Rect backRect,
+            @NonNull Bitmap foreground, @NonNull Rect foreRect) {
         Bitmap result = background;
         if (background.getWidth() != dstWidth || background.getHeight() != dstHeight) {
             result = Bitmap.createBitmap(dstWidth, dstHeight, Bitmap.Config.ARGB_8888);
