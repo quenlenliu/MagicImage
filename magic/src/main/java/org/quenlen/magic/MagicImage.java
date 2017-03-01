@@ -24,12 +24,15 @@ public class MagicImage {
 
     private static void load() {
         try {
-            Log.d(TAG, "Auto load");
+            Log.d(TAG, "Auto load: " + LIBRARY_NAME);
             System.loadLibrary(LIBRARY_NAME);
             STATE = MASK_SUCCESS;
         } catch (Exception ex) {
-            Log.e(TAG, "Auto load library error");
+            Log.e(TAG, "Auto load library error: " + ex.getMessage());
             STATE = MASK_FAILURE;
+        } catch (UnsatisfiedLinkError ulEx) {
+            STATE = MASK_FAILURE;
+            Log.e(TAG, "Auto load library error: " + ulEx.getMessage());
         }
     }
     
@@ -58,11 +61,16 @@ public class MagicImage {
     public static void loadLibrary(String libraryPath) {
         if (!isLibraryLoadSuccess()) {
             try {
+                Log.d(TAG, "Manual load library: " + libraryPath);
                 System.load(libraryPath);
                 STATE = MASK_SUCCESS;
             } catch (Exception ex) {
-                Log.e(TAG, "Manual load library error");
+                Log.e(TAG, "Manual load library error: " + ex.getMessage());
                 STATE = MASK_FAILURE;
+            } catch(UnsatisfiedLinkError ulEx) {
+                Log.e(TAG, "Manua load library error: " + ulEx.getMessage());
+                STATE = MASK_FAILURE;
+
             }
         }
     }
